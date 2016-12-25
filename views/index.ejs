@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <p><% var data = ""; if(message) data = message; else data = " " %> <%= data %></p>
+    <form method="post">
+      Email : <input type="email" name="email" placeholder="saunishrsheth@gmail.com"><br>
+      Password : <input type="password" name="password" placeholder="password"><br>
+      <input type="submit" value="Submit" name="submit">
+    </form>
+  <a href="/signup">signup</a>
+  </body>
+</html>

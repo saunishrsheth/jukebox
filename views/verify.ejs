@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+<h1><%= title %></h1>
+<p>Welcome to <%= title %></p>
+<a href="/logout/">logout</a>
+<p>your email is: <%= email %></p>
+<form method="post">
+    <input type="email" name="email" placeholder="saunishrsheth@gmail.com">
+    <input type="submit" value="Change Email Address" name="changeemail">
+    <input type="submit" value="Send Email verification" name="emailverify">
+</form>
+<p><%= message %></p>
+</body>
+</html>

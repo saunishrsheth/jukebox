@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="http://www.youtube.com/player_api"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<h1><%= title %></h1>
+<p>Welcome to <%= title %></p>
+<a href="/logout/">logout</a>
+
+<div id="player"></div>
+
+</body>
+</html>
+
+
+<script>
+
+
+    var gsocket = io('/player');
+    // create youtube player
+    var player;
+    function onYouTubePlayerAPIReady() {
+        player = new YT.Player('player', {
+            height: '390',
+            width: '640',
+            videoId: '<%= vid %>',
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    // autoplay video
+    function onPlayerReady(event) {
+        console.log(event);
+        event.target.playVideo();
+    }
+
+    // when video ends
+    function onPlayerStateChange(event) {
+        if(event.data === 0){
+            gsocket.emit('eov', {vid : '<%= vid %>'});
+            location.reload();
+        }
+    }
+
+</script>

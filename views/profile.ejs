@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<h1><%= title %></h1>
+<p>Welcome to <%= title %></p>
+<a href="/logout/">logout</a>
+
+<form method="post">
+    Youtube Search : <input type="text" name="search"><br>
+    <input type="submit" value="Submit" name="submit_search">
+</form>
+
+<form method="post">
+    Url to playlist <input type="url" name="url"><br>
+    <input type="submit" value="Submit" name="submit_url">
+</form>
+
+
+<% if (data) {
+for (var i = 0; i < data.length; i++) { %>
+<h4> <%= data[i].title %> </h4>
+<img src="<%= data[i].image %>" style="width:200px;height:100px;">
+<p> <%= data[i].description %> </p>
+<input type="hidden" name="vid" value="<%= data[i].video_id %>">
+<input type="hidden" name="title" value="<%= data[i].title %>">
+<input type="hidden" name="description" value="<%= data[i].description %>">
+<input type="hidden" name="image" value="<%= data[i].image %>">
+<input type="button" name="add" onclick="clickevent()" value="Add To Queue">
+<% }
+} %>
+
+</body>
+</html>
+
+<script>
+    var socket = io('/<%= user.uid %>');
+    function clickevent() {
+        var vid = document.getElementsByName('vid')[0].value;
+        var title = document.getElementsByName('title')[0].value;
+        var description = document.getElementsByName('description')[0].value;
+        var image = document.getElementsByName('image')[0].value;
+
+        socket.on('song_add', function (data) {
+            console.log(data);
+            data = null;
+        });
+
+        socket.emit('add', {
+            video_id: vid,
+            title: title,
+            description: description,
+            image: image
+        });
+
+    }
+
+    var gsocket = io('/global');
+    gsocket.on('playlist', function (data) {
+        console.log(data);
+    })
+</script>
