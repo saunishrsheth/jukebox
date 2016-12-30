@@ -2,24 +2,23 @@
 <html>
 <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </head>
 <body>
 <h1><%= title %></h1>
 <p>Welcome to <%= title %></p>
 <a href="/logout/">logout</a>
+<p id="msg"></p>
+<p id="cp"></p>
 
 <form method="post">
     Youtube Search : <input type="text" name="search"><br>
     <input type="submit" value="Submit" name="submit_search">
 </form>
 
-<form method="post">
-    Url to playlist <input type="url" name="url"><br>
-    <input type="submit" value="Submit" name="submit_url">
-</form>
-
+<div id="pl"></div>
 
 <% if (data) {
 for (var i = 0; i < data.length; i++) { %>
@@ -30,7 +29,7 @@ for (var i = 0; i < data.length; i++) { %>
 <input type="hidden" name="title" value="<%= data[i].title %>">
 <input type="hidden" name="description" value="<%= data[i].description %>">
 <input type="hidden" name="image" value="<%= data[i].image %>">
-<input type="button" name="add" onclick="clickevent()" value="Add To Queue">
+<input type="button" name="add" onclick="clickevent(<%= i %>)" value="Add To Queue">
 <% }
 } %>
 
@@ -38,29 +37,75 @@ for (var i = 0; i < data.length; i++) { %>
 </html>
 
 <script>
-    var socket = io('/<%= user.uid %>');
-    function clickevent() {
-        var vid = document.getElementsByName('vid')[0].value;
-        var title = document.getElementsByName('title')[0].value;
-        var description = document.getElementsByName('description')[0].value;
-        var image = document.getElementsByName('image')[0].value;
+    var gsocket = io('/global');
 
-        socket.on('song_add', function (data) {
-            console.log(data);
-            data = null;
-        });
+    window.onload = function () {
+        gsocket.emit('hello', { uid : '<%= user.uid %>' });
+    }
 
-        socket.emit('add', {
+    gsocket.on('message', function (data) {
+        document.getElementById("msg").innerHTML = data.data;
+    });
+
+    function clickevent(i) {
+        var vid = document.getElementsByName('vid')[i].value;
+        var title = document.getElementsByName('title')[i].value;
+        var description = document.getElementsByName('description')[i].value;
+        var image = document.getElementsByName('image')[i].value;
+
+
+        gsocket.emit('add', {
             video_id: vid,
             title: title,
             description: description,
-            image: image
+            image: image,
+            uid: '<%= user.uid %>'
         });
 
     }
-
-    var gsocket = io('/global');
     gsocket.on('playlist', function (data) {
         console.log(data);
+        var e = document.getElementById('pl');
+        while (e.hasChildNodes()) {
+            e.removeChild(e.lastChild);
+        }
+        var element = document.getElementById("pl");
+        for (var i = 0; i < data.playlist.length; i++) {
+            var title = document.createElement("p");
+            var text = document.createTextNode(data.playlist[i].title);
+            title.appendChild(text);
+            element.appendChild(title);
+
+            var lbtn = document.createElement('button');
+            var dbtn = document.createElement('button');
+            var ltext = document.createTextNode('like');
+            var dtext = document.createTextNode('dislike');
+            lbtn.setAttribute("class", "like_btn");
+            dbtn.setAttribute("class", "dislike_btn");
+
+            lbtn.name = 'like';
+            lbtn.name = 'dislike';
+            lbtn.value = data.playlist[i].vid;
+            dbtn.value = data.playlist[i].vid;
+            lbtn.appendChild(ltext);
+            dbtn.appendChild(dtext);
+
+            element.appendChild(lbtn);
+            element.appendChild(dbtn);
+
+        }
+        $('.like_btn').click(function () {
+            gsocket.emit('like', {vid: $(this).val(), uid: '<%= user.uid %>'});
+        })
+
+        $('.dislike_btn').click(function () {
+            gsocket.emit('dislike', {vid: $(this).val(), uid: '<%= user.uid %>'});
+        })
+
+    })
+
+
+    gsocket.on('nowPlaying', function (data) {
+        document.getElementById("cp").innerHTML = data.song.title;
     })
 </script>

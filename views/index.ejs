@@ -1,18 +1,45 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-    <p><% var data = ""; if(message) data = message; else data = " " %> <%= data %></p>
-    <form method="post">
-      Email : <input type="email" name="email" placeholder="saunishrsheth@gmail.com"><br>
-      Password : <input type="password" name="password" placeholder="password"><br>
-      <input type="submit" value="Submit" name="submit">
-    </form>
-  <a href="/signup">signup</a>
-  </body>
+    <script src="/javascripts/jquery-1.12.4.min.js"></script>
+    <link rel='stylesheet' href='/stylesheets/bootstrap.min.css'/>
+    <script src="/javascripts/bootstrap.min.js"></script>
+
+</head>
+<body>
+<div class="jumbotron">
+    <div class="container">
+        <h1>Jukebox</h1>
+        <p>Welcome to <%= title %> page</p>
+    </div>
+
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Login</h3>
+            </div>
+            <div class="panel-body">
+                <div class="alert alert-warning alert-dismissable">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    <% var data = ""; if (message) data = message; else data = "Message Box" %>
+                    <%= data %>
+                </div>
+                <form method="post">
+                    <div class="form-group">
+                        <label for="email">Email address:</label>
+                        <input type="email" name="email" class="form-control" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="pwd">Password:</label>
+                        <input type="password" name="password" class="form-control" id="pwd">
+                    </div>
+                    <input type="submit" value="Submit" name="submit" class="btn btn-success">
+                    <button type="button" onclick="window.location.href = '/signup'" class="btn btn-primary">Sign-Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
 </html>

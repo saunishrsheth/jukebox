@@ -21,6 +21,7 @@
 
 
     var gsocket = io('/player');
+    var nsocket = io('/now');
     // create youtube player
     var player;
     function onYouTubePlayerAPIReady() {
@@ -37,7 +38,7 @@
 
     // autoplay video
     function onPlayerReady(event) {
-        console.log(event);
+        nsocket.emit('nowPlaying', {currentSong : '<%= vid %>'});
         event.target.playVideo();
     }
 

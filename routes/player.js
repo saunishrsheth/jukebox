@@ -9,6 +9,7 @@ module.exports = function(io) {
             if(req.user.isAdmin) {
                 playlist.find({}, function (err, list) {
                     playlist.find({ flag : false}, function (err, clist) {
+                        var no;
                         if(clist[0] == undefined){
                             for(var i = 0; i < list.length; i++){
                                 list[i].flag = false;
@@ -16,10 +17,12 @@ module.exports = function(io) {
                                     if(err) console.log('flag save error');
                                 })
                             }
-                            res.render('player', { title: 'Youtube Player' , vid: list[0].vid});
+                            no = Math.floor(Math.random() * list.length) + 0;
+                            res.render('player', { title: 'Youtube Player' , vid: list[no].vid});
                         }
                         else{
-                            res.render('player', { title: 'Youtube Player' , vid: clist[0].vid});
+                            no = Math.floor(Math.random() * clist.length) + 0;
+                            res.render('player', { title: 'Youtube Player' , vid: clist[no].vid});
                         }
                     });
                 });
@@ -42,6 +45,7 @@ module.exports = function(io) {
             });
         });
     });
+
 
     return router;
 

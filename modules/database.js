@@ -16,7 +16,18 @@ var userSchema = new schema({
     password : {type : String, require : true},
     isAdmin : {type : Boolean},
     isVerified : {type : Boolean},
-    emailToken : {type : String}
+    emailToken : {type : String},
+    google : {
+        access_token : { type : String },
+        gid : {type : Number},
+        name : {
+            firstName : {type : String},
+            lastName : {type : String}
+        },
+        email : { type : String },
+        photo : { type : String },
+        gender : { type : String }
+    }
 });
 
 var playlistSchema = new schema({
@@ -26,13 +37,24 @@ var playlistSchema = new schema({
     image : {type : String},
     addedby : {type : String},
     flag : {type : Boolean},
-    priority : {type : String}
+    priority : {type : String},
+    like_count : { type : Number},
+    dislike_count : { type : Number }
+});
+
+var like_dislike_Schema = new schema({
+    uid : { type : String},
+    vid : { type : String},
+    like : { type : Boolean},
+    dislike : { type : Boolean}
 });
 
 var user = mongoose.model('users', userSchema);
 var playlist = mongoose.model('playlist', playlistSchema);
+var like_dislike = mongoose.model('like_dislike', like_dislike_Schema);
 
 module.exports = {
     user : user,
-    playlist : playlist
+    playlist : playlist,
+    like_dislike : like_dislike
 };
