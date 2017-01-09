@@ -12,10 +12,7 @@ router.post('/', function (req, res, next) {
         if (user === false) {
             res.render('signup', { title : 'Register', message : info.message});
         } else {
-            req.login(user, function(err) {
-                if (err) { return next(err); }
-                else return res.redirect('/verify/' + user.name.firstName +'/message');
-            });
+            res.redirect('/?message=Signup Successfull please login');
         }
     })(req, res, next);
 });

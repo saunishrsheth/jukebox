@@ -10,15 +10,15 @@ var password = 'd6F3Efeq';
 var moment = require('moment');
 var request = require('request');
 
-function encrypt(text){
-    var cipher = crypto.createCipher(algorithm,password);
-    var crypted = cipher.update(text,'utf8','hex');
+function encrypt(text) {
+    var cipher = crypto.createCipher(algorithm, password);
+    var crypted = cipher.update(text, 'utf8', 'hex');
     crypted += cipher.final('hex');
     return crypted;
 }
-function decrypt(text){
-    var decipher = crypto.createDecipher(algorithm,password);
-    var dec = decipher.update(text,'hex','utf8');
+function decrypt(text) {
+    var decipher = crypto.createDecipher(algorithm, password);
+    var dec = decipher.update(text, 'hex', 'utf8');
     dec += decipher.final('utf8');
     return dec;
 }
@@ -96,62 +96,75 @@ var create = function (req, email, password) {
                 reject(data);
             }
             else {
-                user.findOne({mobileNo: req.body.mobileNo}, function (err, check) {
-                    if (check) {
-                        error = "MobileNoExists";
-                        message = 'This mobile no is already registered';
+                var addUser = new user({
+                    uid: shortid.generate(),
+                    name: {
+                        firstName: req.body.first_name,
+                        lastName: req.body.last_name
+                    },
+                    gender: req.body.gender,
+                    date_of_birth: req.body.DOB,
+                    isAdmin: false,
+                    email: email,
+                    password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
+                    isVerified: false
+                });
+                addUser.save(function (err, user) {
+                    if (err) {
+                        error = "dataIncorrect";
+                        message = "Database is unable to accept this data"
+                    } else {
+                        result = {
+                            uid: user.uid,
+                            mobileNo: user.mobileNo,
+                            image: user.image,
+                            isAdmin: user.isAdmin,
+                            email: user.email,
+                            isVerified: user.isVerified,
+                            name: {
+                                firstName: user.name.firstName,
+                                lastName: user.name.firstName
+                            }
+                        };
+                        message = "success";
                         data = {
                             error: error,
                             user: result,
                             message: message
                         };
-                        reject(data);
-                    }
-                    else {
-                        var addUser = new user({
-                            uid: shortid.generate(),
-                            name: {
-                                firstName: req.body.first_name,
-                                lastName: req.body.last_name
-                            },
-                            mobileNo: req.body.mobileNo,
-                            image: null,
-                            isAdmin: false,
-                            email: email,
-                            password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
-                            isVerified: false
-                        });
-                        addUser.save(function (err, user) {
-                            if (err) {
-                                error = "dataIncorrect";
-                                message = "Database is unable to accept this data"
-                            } else {
-                                result = {
-                                    uid: user.uid,
-                                    mobileNo: user.mobileNo,
-                                    image: user.image,
-                                    isAdmin: user.isAdmin,
-                                    email: user.email,
-                                    isVerified: user.isVerified,
-                                    name: {
-                                        firstName: user.name.firstName,
-                                        lastName: user.name.firstName
-                                    }
-                                };
-                                message = "success";
-                                data = {
-                                    error: error,
-                                    user: result,
-                                    message: message
-                                };
-                                fulfill(data);
-                            }
-                        });
+                        fulfill(data);
                     }
                 });
+
             }
         });
     });
+};
+var link_fb_user = function (local_user, profile) {
+    return new promise(function (fulfill, reject) {
+        user.findOne({'facebook.fbid': profile.id}, function (err, result) {
+            if (err) reject({status: 'IntSer', message: 'Internal Server Error'});
+            else if (result != undefined) reject({
+                status: 'AldLnk',
+                message: 'This account is already linked with Facebook account'
+            });
+            else {
+                user.findOne({uid: local_user.uid}, function (err, data) {
+                    data.facebook.fbid = profile.id;
+                    data.facebook.name.firstName = profile.name.givenName;
+                    data.facebook.name.lastName = profile.name.familyName;
+                    data.facebook.gender = profile.gender;
+                    data.facebook.fbemail = profile.emails[0].value;
+                    data.facebook.image = profile.photos[0].value;
+                    data.facebook.music = JSON.stringify(profile._json.music.data);
+                    data.save(function (err) {
+                        if (err) reject({satus: 'IntSer', message: 'Internal Server Error'});
+                        else fulfill({status: 'success', message: 'Facebook Account linked'});
+                    })
+                })
+            }
+        });
+    })
 };
 var addSong = function (vid, title, description, image, uid) {
     return new promise(function (fulfill, reject) {
@@ -191,29 +204,32 @@ var like = function (vid, uid) {
                         if (data[i].vid === vid) {
                             bool = false;
                             if (data[i].like) reject({status_code: 'AlrTru', message: "Song is already liked"});
-                            else{
+                            else {
                                 data[i].like = true;
                                 data[i].dislike = false;
                                 data[i].save(function (err) {
-                                    if(err) reject({ status_code : 'IntSer', message: 'Internal Server Error' });
+                                    if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                     else {
-                                        playlist.findOne({vid : vid}, function (err, song) {
-                                            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                        playlist.findOne({vid: vid}, function (err, song) {
+                                            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                             else {
                                                 song.like_count = song.like_count + 1;
                                                 song.dislike_count = song.dislike_count - 1;
                                                 song.save(function (err) {
-                                                    if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                                    if (err) reject({
+                                                        status_code: 'IntSer',
+                                                        message: 'Internal Server Error'
+                                                    });
                                                 })
                                             }
                                         });
-                                        fulfill({ status_code : 'success', message: 'song liked' });
+                                        fulfill({status_code: 'success', message: 'song liked'});
                                     }
                                 })
                             }
                         }
                     }
-                    if(bool) createLike();
+                    if (bool) createLike();
                 } else createLike();
             }
             function createLike() {
@@ -226,12 +242,12 @@ var like = function (vid, uid) {
                 like.save(function (err) {
                     if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                     else {
-                        playlist.findOne({vid : vid}, function (err, song) {
-                            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                        playlist.findOne({vid: vid}, function (err, song) {
+                            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                             else {
                                 song.like_count = song.like_count + 1;
                                 song.save(function (err) {
-                                    if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                    if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                 })
                             }
                         });
@@ -253,29 +269,32 @@ var dislike = function (vid, uid) {
                         if (data[i].vid === vid) {
                             bool = false;
                             if (data[i].dislike) reject({status_code: 'AlrTru', message: "Song is already disliked"});
-                            else{
+                            else {
                                 data[i].like = false;
                                 data[i].dislike = true;
                                 data[i].save(function (err) {
-                                    if(err) reject({ status_code : 'IntSer', message: 'Internal Server Error' });
+                                    if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                     else {
-                                        playlist.findOne({vid : vid}, function (err, song) {
-                                            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                        playlist.findOne({vid: vid}, function (err, song) {
+                                            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                             else {
                                                 song.like_count = song.like_count - 1;
                                                 song.dislike_count = song.dislike_count + 1;
                                                 song.save(function (err) {
-                                                    if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                                    if (err) reject({
+                                                        status_code: 'IntSer',
+                                                        message: 'Internal Server Error'
+                                                    });
                                                 })
                                             }
                                         });
-                                        fulfill({ status_code : 'success', message: 'song disliked' });
+                                        fulfill({status_code: 'success', message: 'song disliked'});
                                     }
                                 })
                             }
                         }
                     }
-                    if(bool) createLike();
+                    if (bool) createLike();
                 } else createLike();
             }
             function createLike() {
@@ -288,12 +307,12 @@ var dislike = function (vid, uid) {
                 dislike.save(function (err) {
                     if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                     else {
-                        playlist.findOne({vid : vid}, function (err, song) {
-                            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                        playlist.findOne({vid: vid}, function (err, song) {
+                            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                             else {
                                 song.dislike_count = song.dislike_count + 1;
                                 song.save(function (err) {
-                                    if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+                                    if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
                                 })
                             }
                         });
@@ -307,11 +326,11 @@ var dislike = function (vid, uid) {
 var viewPlaylist = function (uid) {
     return new promise(function (fulfill, reject) {
         playlist.find({}, function (err, list) {
-            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
+            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
             else {
-                like_dislike.find({ uid : uid }, function (err, ldlist) {
-                    if(err) reject({ status_code : 'IntSer', message: 'Internal Server Error'});
-                    else fulfill({ playlist : list, likes_dislikes : ldlist});
+                like_dislike.find({uid: uid}, function (err, ldlist) {
+                    if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
+                    else fulfill({playlist: list, likes_dislikes: ldlist});
                 })
             }
         })
@@ -319,35 +338,34 @@ var viewPlaylist = function (uid) {
 };
 var verifyUser = function (token) {
     return new promise(function (fulfill, reject) {
-        try{
+        try {
             var data = JSON.parse(decrypt(token));
-            user.findOne({email : data.email}, function (err, user) {
-                if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error'});
-                else{
-                    if( moment().isBefore(data.dateandtime) ) {
+            user.findOne({email: data.email}, function (err, user) {
+                if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
+                else {
+                    if (moment().isBefore(data.dateandtime)) {
                         user.isVerified = true;
                         user.save(function (err) {
-                            if(err) reject({ status_code : 'IntSer', message : 'Internal Server Error'});
-                            else fulfill({ status_code : 'success', message : data.email + ' is verified' , user : user});
+                            if (err) reject({status_code: 'IntSer', message: 'Internal Server Error'});
+                            else fulfill({status_code: 'success', message: data.email + ' is verified', user: user});
                         });
                     }
-                    else reject({ status_code : 'TokExp', message : 'This Token is expired Please Re-generate' });
+                    else reject({status_code: 'TokExp', message: 'This Token is expired Please Re-generate'});
                 }
             });
-        }catch (err){
-            reject({ status_code : 'InvUrl', message : 'Invalid Verification URL' });
+        } catch (err) {
+            reject({status_code: 'InvUrl', message: 'Invalid Verification URL'});
         }
     });
 };
 var sendVerification = function (user) {
-    console.log(user);
     return new promise(function (fulfill, reject) {
         var data = {
             email: user.email,
             dateandtime: moment().add(24, 'h')
         };
         var str = encrypt(JSON.stringify(data));
-        var url = "http://192.168.1.69:3000/verify/" + user.name.firstName + "/" + str;
+        var url = "http://localhost:3000/verify/" + user.name.firstName + "/" + str;
         var headers = {
             'Content-Type': 'application/json'
         };
@@ -358,10 +376,12 @@ var sendVerification = function (user) {
             headers: headers,
             body: dataString
         };
+
         function callback(error, response, body) {
-            if (error) reject({ status_code : 'IntSer', message : 'Internal Server Error' });
-            else fulfill({ status_code : 'success', message : 'Email Verification Sent' });
+            if (error) reject({status_code: 'IntSer', message: 'Internal Server Error'});
+            else fulfill({status_code: 'success', message: 'Email Verification Sent'});
         }
+
         request(options, callback);
     });
 };
@@ -370,9 +390,10 @@ module.exports = {
     checkAuth: checkAuth,
     create: create,
     addsong: addSong,
-    like : like,
-    dislike : dislike,
-    viewPlaylist : viewPlaylist,
-    verifyUser : verifyUser,
-    sendVerificaion : sendVerification
+    like: like,
+    dislike: dislike,
+    viewPlaylist: viewPlaylist,
+    verifyUser: verifyUser,
+    sendVerificaion: sendVerification,
+    link_fb_user: link_fb_user
 };

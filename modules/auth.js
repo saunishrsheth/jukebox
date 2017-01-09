@@ -37,20 +37,38 @@ var login = new LocalStratgy({
         return done(null, false, {message : error.message});
     });
 });
+var facebook_link = (new FacebookStrategy({
+        clientID: "1427571047268002",
+        clientSecret: "fc149b38e028280a21d7d3ffdefba26a",
+        callbackURL: "http://localhost:3000/auth/facebook/callback",
+        profileFields: ['email', 'music', 'picture', 'name', 'gender'],
+        passReqToCallback : true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+        dbOperation.link_fb_user(req.user, profile).then(function (value) {
+            console.log(value);
+        }, function (error) {
+            console.log(error);
+        });
+    }
+));
+
 passport.use(new GoogleStrategy({
         clientID: '646021591909-bnkbrifbjr0rmfhog2aaav3hjunnqj8t.apps.googleusercontent.com',
         clientSecret: 'F8kRVYX4Omh4ECmpp0mBgU8A',
         callbackURL: "http://localhost:3000/auth/google/callback"
     },
     function(accessToken, refreshToken, profile, done) {
-        console.log(refreshToken);
+        console.log(profile);
     }
 ));
+
 
 
 //passport middleware
 passport.use('local-signup', signUp);
 passport.use('local-login', login);
+passport.use('facebook_link', facebook_link);
 
 //module passport export for app.js
 module.exports = passport;

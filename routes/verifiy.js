@@ -27,34 +27,34 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/', function (req, res, next) {
-    if (req.user) {
-        if (req.body.emailverify === "Send Email verification") {
-            sendVerification(req.user).then(function (value) {
-                res.redirect('/verify/' + req.user.name.firstName + '/message?message=' + value.message);
-            }, function (error) {
-                res.redirect('/verify/' + req.user.name.firstName + '/message?message=' + value.message);
-            });
-        }
 
-        else if (req.body.changeemail === "Change Email Address") {
-            user.findOne({email: req.user.email}, function (err, result) {
-                if (err) res.redirect('/verify/' + req.user.name.firstName + '/message?message=some error');
-                else {
-                    user.findOne({email: req.body.email}, function (err, check) {
-                        if (check) res.redirect('/verify/' + req.user.name.firstName + '/message?message=This email is already in use');
-                        else {
-                            result.email = req.body.email;
-                            result.save(function (err) {
-                                if (err) res.redirect('/verify/' + req.user.name.firstName + '/message?message=some error');
-                                else res.redirect('/verify/' + req.user.name.firstName + '/message?message=email updated successfully');
-                            })
-                        }
-                    });
-                }
-            })
-        }
+    if (req.body.emailverify === "Send Email verification") {
+        sendVerification(req.user).then(function (value) {
+            req.logout();
+            res.redirect('/?message=' + value.message);
+        }, function (error) {
+            res.redirect('/verify/' + req.user.name.firstName + '/message?message=' + value.message);
+        });
     }
-    else res.redirect('/?message=User is not logged in');
+
+    else if (req.body.changeemail === "Change Email Address") {
+        user.findOne({email: req.user.email}, function (err, result) {
+            if (err) res.redirect('/verify/' + req.user.name.firstName + '/message?message=some error');
+            else {
+                user.findOne({email: req.body.email}, function (err, check) {
+                    if (check) res.redirect('/verify/' + req.user.name.firstName + '/message?message=This email is already in use');
+                    else {
+                        result.email = req.body.email;
+                        result.save(function (err) {
+                            if (err) res.redirect('/verify/' + req.user.name.firstName + '/message?message=some error');
+                            else res.redirect('/verify/' + req.user.name.firstName + '/message?message=email updated successfully');
+                        })
+                    }
+                });
+            }
+        })
+    }
+
 });
 
 module.exports = router;

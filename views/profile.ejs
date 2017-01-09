@@ -2,58 +2,65 @@
 <html>
 <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <script src="/javascripts/jquery-2.1.4.min.js"></script>
+    <link rel='stylesheet' href='/stylesheets/materialize.min.css'/>
+    <script src="/javascripts/materialize.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <script src="/javascripts/react.min.js"></script>
+    <script src="/javascripts/react-dom.min.js"></script>
+    <script src="/javascripts/browser.min.js"></script>
 </head>
 <body>
-<h1><%= title %></h1>
-<p>Welcome to <%= title %></p>
-<a href="/logout/">logout</a>
-<p id="msg"></p>
-<p id="cp"></p>
 
-<form method="post">
-    Youtube Search : <input type="text" name="search"><br>
-    <input type="submit" value="Submit" name="submit_search">
-</form>
+<nav>
 
-<div id="pl"></div>
+            <a href="#" data-activates="slide-out" class="button-collapse"><i class="material-icons white-text">view_headline</i></a>
+</nav>
 
-<% if (data) {
-for (var i = 0; i < data.length; i++) { %>
-<h4> <%= data[i].title %> </h4>
-<img src="<%= data[i].image %>" style="width:200px;height:100px;">
-<p> <%= data[i].description %> </p>
-<input type="hidden" name="vid" value="<%= data[i].video_id %>">
-<input type="hidden" name="title" value="<%= data[i].title %>">
-<input type="hidden" name="description" value="<%= data[i].description %>">
-<input type="hidden" name="image" value="<%= data[i].image %>">
-<input type="button" name="add" onclick="clickevent(<%= i %>)" value="Add To Queue">
-<% }
-} %>
+<div class="container">
 
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <a href="/logout/">logout</a>
+
+    <form method="post">
+        Youtube Search : <input type="text" name="search"><br>
+        <input type="submit" value="Submit" name="submit_search">
+    </form>
+
+    <div class="row">
+        <div class="col s6">
+            <div id="pl"></div>
+        </div>
+    </div>
+
+    <% if (data) {
+    for (var i = 0; i < data.length; i++) { %>
+    <h4> <%= data[i].title %> </h4>
+    <img src="<%= data[i].image %>" style="width:200px;height:100px;">
+    <p> <%= data[i].description %> </p>
+    <input type="hidden" name="vid" value="<%= data[i].video_id %>">
+    <input type="hidden" name="title" value="<%= data[i].title %>">
+    <input type="hidden" name="description" value="<%= data[i].description %>">
+    <input type="hidden" name="image" value="<%= data[i].image %>">
+    <input type="button" name="add" onclick="clickevent(<%= i %>)" value="Add To Queue">
+    <% }
+    } %>
+
+</div>
 </body>
 </html>
 
 <script>
     var gsocket = io('/global');
-
-    window.onload = function () {
-        gsocket.emit('hello', { uid : '<%= user.uid %>' });
-    }
-
-    gsocket.on('message', function (data) {
-        document.getElementById("msg").innerHTML = data.data;
-    });
-
     function clickevent(i) {
         var vid = document.getElementsByName('vid')[i].value;
         var title = document.getElementsByName('title')[i].value;
         var description = document.getElementsByName('description')[i].value;
         var image = document.getElementsByName('image')[i].value;
-
-
         gsocket.emit('add', {
             video_id: vid,
             title: title,
@@ -61,51 +68,51 @@ for (var i = 0; i < data.length; i++) { %>
             image: image,
             uid: '<%= user.uid %>'
         });
-
     }
+</script>
+
+<script type="text/babel">
+    var gsocket = io('/global');
+
+    window.onload = function () {
+        gsocket.emit('hello', {uid: '<%= user.uid %>'});
+    }
+
+
     gsocket.on('playlist', function (data) {
-        console.log(data);
-        var e = document.getElementById('pl');
-        while (e.hasChildNodes()) {
-            e.removeChild(e.lastChild);
-        }
-        var element = document.getElementById("pl");
-        for (var i = 0; i < data.playlist.length; i++) {
-            var title = document.createElement("p");
-            var text = document.createTextNode(data.playlist[i].title);
-            title.appendChild(text);
-            element.appendChild(title);
-
-            var lbtn = document.createElement('button');
-            var dbtn = document.createElement('button');
-            var ltext = document.createTextNode('like');
-            var dtext = document.createTextNode('dislike');
-            lbtn.setAttribute("class", "like_btn");
-            dbtn.setAttribute("class", "dislike_btn");
-
-            lbtn.name = 'like';
-            lbtn.name = 'dislike';
-            lbtn.value = data.playlist[i].vid;
-            dbtn.value = data.playlist[i].vid;
-            lbtn.appendChild(ltext);
-            dbtn.appendChild(dtext);
-
-            element.appendChild(lbtn);
-            element.appendChild(dbtn);
-
-        }
-        $('.like_btn').click(function () {
-            gsocket.emit('like', {vid: $(this).val(), uid: '<%= user.uid %>'});
-        })
-
-        $('.dislike_btn').click(function () {
-            gsocket.emit('dislike', {vid: $(this).val(), uid: '<%= user.uid %>'});
-        })
-
-    })
+        console.log('here');
+        var Song = React.createClass({
 
 
-    gsocket.on('nowPlaying', function (data) {
-        document.getElementById("cp").innerHTML = data.song.title;
-    })
+            likeClick: function (vid) {
+                gsocket.emit('like', {vid: vid, uid: '<%= user.uid %>'});
+            },
+            dislikeClick: function (vid) {
+                gsocket.emit('dislike', {vid: vid, uid: '<%= user.uid %>'});
+            },
+            render: function () {
+                var PlaylistComponents = this.props.datas.map(function (playlist) {
+                    return <div>
+                        <img src={playlist.image} width="200" height="150"/>
+                        <h3>{playlist.title}</h3>
+                        <p>{playlist.description}</p>
+
+                        <button
+                                onClick={this.likeClick.bind(this, playlist.vid)}
+                                type="button" name="like" value={playlist.vid}>Like
+                            <i className="material-icons right">thumb_up</i>
+                        </button>
+                        <button
+                                onClick={this.dislikeClick.bind(this, playlist.vid)}
+                                type="button" name="dislike" value={playlist.vid}>DisLike
+                            <i className="material-icons right">thumb_down</i>
+                        </button>
+
+                    </div>;
+                }, this);
+                return <div>{PlaylistComponents}</div>;
+            }
+        });
+        ReactDOM.render(<Song datas={data.playlist}/>, document.getElementById('pl'));
+    });
 </script>

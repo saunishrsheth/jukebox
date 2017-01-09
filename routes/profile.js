@@ -83,10 +83,10 @@ module.exports = function (io) {
         socket.on('add', function (data) {
             addSong(data.video_id, data.title, data.description, data.image, data.uid).then(function (value) {
                 viewPlaylist(data.uid).then(function (result) {
-                    socket.emit('playlist', { playlist : result.playlist, likes_dislikes : result.likes_dislikes , uid : data.uid });
+                    gsocket.emit('playlist', { playlist : result.playlist, likes_dislikes : result.likes_dislikes , uid : data.uid });
                 }, function (errors) {
                     console.log(errors);
-                })
+                });
             },function (err) {
                 console.log(err);
             });

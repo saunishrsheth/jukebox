@@ -16,7 +16,9 @@ var logout = require('./routes/logout');
 var player = require('./routes/player')(io);
 var google_auth = require('./routes/google_auth');
 var google_auth_callback = require('./routes/google_auth_callback');
-var facebook_auth_callback = require('./routes/google_auth_callback');
+var facebook_auth = require('./routes/facebook_auth');
+var facebook_auth_callback = require('./routes/facebook_auth_callback');
+var test = require('./routes/test');
 
 var app = express();
 app.io = io;
@@ -48,6 +50,9 @@ app.use('/logout', logout);
 app.use('/player', player);
 app.use('/auth/google', google_auth);
 app.use('/auth/google/callback', google_auth_callback);
+app.use('/auth/facebook', facebook_auth);
+app.use('/auth/facebook/callback', facebook_auth_callback);
+app.use('/test', test);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

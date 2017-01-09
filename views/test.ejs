@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <script src="/javascripts/react.min.js"></script>
+    <script src="/javascripts/react-dom.min.js"></script>
+    <script src="/javascripts/browser.min.js"></script>
+</head>
+<body>
+<h2><%= title %></h2>
+<div id="app"></div>
+
+<script type="text/babel">
+    var Form = React.createClass({
+        render: function() {
+            return (
+                    <div>
+                        <p>{this.props.message}</p>
+                        <form method="post">
+                            <label>Email : </label>
+                            <input type="email" name="email" placeholder="abc@xyz.com" /> <br/>
+                            <label>password : </label>
+                            <input type="password" name="password" placeholder="abc@xyz.com" /><br/>
+                            <input type="Submit" name="submit" value="Submit" />
+                        </form>
+                    </div>
+            )
+        }
+    });
+    ReactDOM.render(<Form message={'hello world'}/>, document.getElementById('app'));
+
+</script>
+
+</body>
+</html>
